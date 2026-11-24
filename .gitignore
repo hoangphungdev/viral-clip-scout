@@ -2,6 +2,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 clip-scout-out/
+edit_blueprints/
 *.tmp
 .DS_Store
 Thumbs.db

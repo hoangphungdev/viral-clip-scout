@@ -1,12 +1,18 @@
 # viral-clip-scout
 
-A portable, zero-render [Agent Skill](https://agentskills.io) that analyzes long-form videos, audio files, YouTube URLs, or transcripts (`.srt`, `.vtt`, `.json`) to surface **only genuinely high-potential short segments** for editing elsewhere — **without forcing a fixed clip count** (returning `0` clips is valid when nothing clears the quality bar) and **without needing a separate LLM API key** (the host agent performs the analysis and scoring).
+A portable, zero-render [Agent Skills](https://agentskills.io) bundle (`viral-clip-scout` + `viral-short-edit-blueprint`) that works end-to-end without a separate LLM API key or GPU render:
 
-## Features
+1. **Scout**: Analyze long-form videos, audio files, YouTube URLs, or transcripts (`.srt`, `.vtt`, `.json`) to surface **only genuinely high-potential short segments** (no forced clip count — returning `0` clips is valid when nothing clears the quality bar).
+2. **Blueprint**: Turn scouted moments (`highlights.json`, clip SRTs, or cut MP4s) into concrete, retention-engineered vertical `9:16` editing blueprints (`edit_guide.md` shot sheets + guardrail-validated `edit_plan.json` specs) ready for CapCut, Premiere Pro, DaVinci Resolve, Remotion, or FFmpeg.
 
-- **Zero-render & lightweight**: Never burns subtitles or re-encodes vertical `9:16` video; leaves final editing to DaVinci Resolve, Premiere Pro, Final Cut Pro, CapCut, or Remotion.
+---
+
+## Included Skills
+
+### 1. `skills/viral-clip-scout/`
+Zero-render, quality-gated moment scouting:
 - **No forced quota**: 2-phase pipeline (Candidate Recall -> Strict 4-Axis Rubric Judge across `hook`, `standalone`, `value`, `payoff`, `0–25` each). Defaults to `--min-score 78 --min-axis 15` and never pads weak filler.
-- **Pure Python 3.10+ stdlib CLI**: `skills/viral-clip-scout/scripts/clip_scout.py` requires zero third-party dependencies for transcript inputs (`.srt`, `.vtt`, Whisper `.json`) and computes 1-second acoustic RMS `[LOUD]` spikes on WAV audio using stdlib `wave` + `array`.
+- **Pure Python 3.10+ stdlib CLI**: `skills/viral-clip-scout/scripts/clip_scout.py` handles `.srt`, `.vtt`, and Whisper `.json` with zero third-party packages and detects 1-second acoustic RMS `[LOUD]` spikes on WAV audio using stdlib `wave` + `array`.
 - **NLE-ready exports**:
   - `timeline.fcpxml` (FCPXML v1.10 with both `Scout Markers` and `Scout Selects` timelines)
   - `markers.edl` (CMX 3600 EDL) & `markers.csv`
@@ -14,35 +20,50 @@ A portable, zero-render [Agent Skill](https://agentskills.io) that analyzes long
   - `subtitles/clip_XX_*.srt` (re-timed to `00:00:00,000`)
   - `cut_commands.txt` (lossless `ffmpeg -c copy` commands, optionally executed via `--cut-streams`)
 
+### 2. `skills/viral-short-edit-blueprint/`
+Retention-engineered vertical `9:16` edit planning chained directly from `viral-clip-scout`:
+- **Pure Python 3.10+ stdlib CLI**: `skills/viral-short-edit-blueprint/scripts/analyze_for_edit.py` inspects `highlights.json` or `.srt` telemetry (`words_per_sec`, `>= 0.36s` dead-air silence cuts, scale beats, caption blocks), optionally samples `1024px` video frames via `ffmpeg`, and validates `edit_plan.json` guardrails.
+- **7 Vertical Layout Modes**: `PRO_TALKING_HEAD`, `TRACK`, `SPLIT`, `ALTERNATE`, `SCREENCAST`, `INSET`, and `WIDE` (plus bottom burned-subtitle pre-crop detection).
+- **Hook, Pacing & Effects Guardrails**: `0–3s` clip-grounded hook overlays (7 styles, face-safe & caption-safe placement), dead-air tightening with alternating scale beats (`1.00 / 1.12 / 1.05 / 1.16`), disciplined pattern-interrupt budgets (`2–6` edits per 30s, zoom `<= 1.15x`, no overlapping zooms, no post-zoom on burned captions).
+- **Captions, Safe Zones & Audio**: 7 dynamic caption presets (`default`, `hormozi`, `pill`, `lime`, `oneword`, `cine`, `clean`), universal `900×1160` safe box (`1080×1920` TikTok / Reels / Shorts), `-14` to `-15 LUFS` voice + `-3 dB` music ducking + micro-SFX sync, and NLE recipes for CapCut, Premiere Pro, DaVinci Resolve, Remotion, and FFmpeg.
+
+---
+
 ## Installation
 
-### Via `skills` CLI (cross-harness)
+### Via `skills` CLI (cross-harness, installs both skills in one command)
+`npx skills` automatically discovers every skill folder under `skills/`:
 ```bash
 npx skills add hoangphungdev/viral-clip-scout
 ```
 
 ### Manual install (any Agent Harness)
-Clone this repository and copy `skills/viral-clip-scout/` into your harness's skill folder:
+Clone this repository and copy **both** folders under `skills/*` (`viral-clip-scout/` and `viral-short-edit-blueprint/`) into your harness's skill directory:
 
 | Agent Harness | Global Path | Project Path |
 | :--- | :--- | :--- |
-| **Antigravity** | `~/.gemini/config/skills/viral-clip-scout/` | `.agents/skills/viral-clip-scout/` |
-| **Codex / OpenCode** | `~/.agents/skills/viral-clip-scout/` | `.agents/skills/viral-clip-scout/` |
-| **Claude Code** | `~/.claude/skills/viral-clip-scout/` | `.claude/skills/viral-clip-scout/` |
-| **Cursor** | `~/.cursor/skills/viral-clip-scout/` | `.cursor/skills/viral-clip-scout/` |
-| **Gemini CLI** | `~/.gemini/skills/viral-clip-scout/` | `.gemini/skills/viral-clip-scout/` |
+| **Antigravity** | `~/.gemini/config/skills/` | `.agents/skills/` |
+| **Codex / OpenCode** | `~/.agents/skills/` | `.agents/skills/` |
+| **Claude Code** | `~/.claude/skills/` | `.claude/skills/` |
+| **Cursor** | `~/.cursor/skills/` | `.cursor/skills/` |
+| **Gemini CLI** | `~/.gemini/skills/` | `.gemini/skills/` |
 
-## Optional Tools (Only for Raw URLs / Uncaptioned Media)
+---
 
-Transcript inputs (`.srt`, `.vtt`, `.json`) work out of the box with Python 3.10+ stdlib only. Install these only when needed:
+## Optional Tools (Only for Raw URLs / Uncaptioned Media / Frame Sampling)
+
+Transcript inputs (`.srt`, `.vtt`, `.json`) and edit blueprint validation work out of the box with Python 3.10+ stdlib only. Install these only when needed:
 - `pip install yt-dlp` — analyze YouTube/video URLs, extract *Most Replayed* heatmaps (`[REPLAY]`), and fetch existing captions
 - `pip install faster-whisper` — transcribe local video/audio files that have no subtitle track
-- `ffmpeg` / `ffprobe` — detect `[LOUD]` audio peaks on compressed media and run `--cut-streams` lossless MP4 cuts
+- `ffmpeg` / `ffprobe` — detect `[LOUD]` audio peaks on compressed media, run `--cut-streams` lossless MP4 cuts, and extract `1024px` frame samples for visual layout inspection
+
+---
 
 ## Self-Test
 
 ```bash
 python skills/viral-clip-scout/scripts/clip_scout.py selftest
+python skills/viral-short-edit-blueprint/scripts/analyze_for_edit.py selftest
 ```
 
 ## License
