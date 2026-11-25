@@ -526,11 +526,16 @@ def validate_edit_plan(plan: dict[str, Any]) -> tuple[list[str], list[str]]:
 
     # --- Effects checks ---
     effects = plan.get("effects") or []
+    dur_mult = max(1, math.ceil(duration / 60.0)) if duration > 75.0 else 1
+    max_edits = min(30, MAX_EDITS * dur_mult)
+    max_flashes = min(5, MAX_FLASHES + (dur_mult - 1))
+    max_titles = min(12, MAX_TITLES + 3 * (dur_mult - 1))
+
     if not isinstance(effects, list):
         errors.append("effects must be a list.")
     else:
-        if len(effects) > MAX_EDITS:
-            errors.append(f"Too many effects ({len(effects)} > max {MAX_EDITS}).")
+        if len(effects) > max_edits:
+            errors.append(f"Too many effects ({len(effects)} > max {max_edits}).")
         zooms: list[tuple[float, float, str]] = []
         flash_count = 0
         titles: list[tuple[float, str]] = []
@@ -591,10 +596,10 @@ def validate_edit_plan(plan: dict[str, Any]) -> tuple[list[str], list[str]]:
             if s2 < e1:
                 errors.append(f"Overlapping zoom effects: {t1} ({s1}..{e1}) overlaps {t2} ({s2}..{e2}).")
 
-        if flash_count > MAX_FLASHES:
-            errors.append(f"Too many flash effects ({flash_count} > max {MAX_FLASHES}).")
-        if len(titles) > MAX_TITLES:
-            errors.append(f"Too many keyword_title effects ({len(titles)} > max {MAX_TITLES}).")
+        if flash_count > max_flashes:
+            errors.append(f"Too many flash effects ({flash_count} > max {max_flashes}).")
+        if len(titles) > max_titles:
+            errors.append(f"Too many keyword_title effects ({len(titles)} > max {max_titles}).")
         titles.sort(key=lambda t: t[0])
         for (t1, n1), (t2, n2) in zip(titles, titles[1:]):
             if (t2 - t1) < TITLE_GAP:
@@ -724,7 +729,35 @@ def cmd_selftest(_args: argparse.Namespace) -> None:
         assert "inside hook window" in joined
         assert "MAX_ZOOM_STRENGTH" in joined or "strength" in joined
 
-    print(json.dumps({"selftest": "passed", "checks": 4}))
+        # Check 5: Extended 150s Short scales allowed flash/title/effect caps cleanly
+        extended_plan = {
+            "clip_id": "clip_ext",
+            "title": "Extended 150s Story Short",
+            "genre": "stream",
+            "duration_sec": 150.0,
+            "has_burned_captions": False,
+            "layout_mode": "WIDE",
+            "hook": {"text": "He almost missed the plane", "style": "red", "duration_sec": 3.5, "y_pct": 0.14},
+            "silence_cuts": [],
+            "effects": [
+                {"type": "flash", "start": 3.5, "end": 3.65},
+                {"type": "flash", "start": 55.0, "end": 55.15},
+                {"type": "flash", "start": 108.0, "end": 108.15},
+                {"type": "keyword_title", "start": 12.0, "end": 13.45, "text": "2 MIN LEFT"},
+                {"type": "keyword_title", "start": 28.0, "end": 29.45, "text": "BUS HIJACK"},
+                {"type": "keyword_title", "start": 58.0, "end": 59.45, "text": "FOUND A PLANE"},
+                {"type": "keyword_title", "start": 78.0, "end": 79.45, "text": "CHOPPER FIRE"},
+                {"type": "keyword_title", "start": 95.0, "end": 96.45, "text": "28 SECONDS"},
+                {"type": "keyword_title", "start": 112.0, "end": 113.45, "text": "LIFTOFF!"},
+                {"type": "keyword_title", "start": 130.0, "end": 131.45, "text": "MOM CALLED"},
+            ],
+            "captions": {"preset": "default", "position": "bottom", "max_chars": 18},
+            "audio": {"voice_lufs_target": -14.0},
+        }
+        errs_ext, _ = validate_edit_plan(extended_plan)
+        assert not errs_ext, f"Expected 0 errors on extended_plan, got: {errs_ext}"
+
+    print(json.dumps({"selftest": "passed", "checks": 5}))
 
 
 def main() -> None:

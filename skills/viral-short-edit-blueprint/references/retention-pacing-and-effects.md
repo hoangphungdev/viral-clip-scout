@@ -6,7 +6,7 @@ Synthesized from `mutonby/openshorts` (`pro_mode.py`, `punch_in.py`, `editor.py`
 
 ## 1. Macro Retention Structure
 
-Engineer every short as a tight psychological loop (target **15–75s**, sweet spot **25–50s**):
+Engineer every short as a tight psychological loop (**15–180s** for YouTube Shorts up to 3 min: sweet spot **25–60s** for tight single-beat moments, and **75–165s** for high-stakes multi-beat story arcs when keeping full buildup + payoff raises retention and score):
 
 | Segment | Timing | Goal & Execution |
 | :--- | :--- | :--- |
@@ -71,7 +71,7 @@ For `PRO_TALKING_HEAD` (single speaker to camera):
 **All reframing, scale beats, and zoom effects MUST run BEFORE burning captions or hook overlays.** If a source clip already has burned-in captions/hooks (`has_burned_captions = true`), **ALL zoom effects (`zoom_in`, `punch_in`, `zoom_pulse`) are FORBIDDEN** — only `color_pop`, `bw_moment`, `flash`, `vignette`, `broll_cutaway`, and `screen_callout` are allowed.
 
 ### Effect Budget & Limits
-- **Frequency**: **2–6 edits per 30 seconds** (`MAX_EDITS = 12` per clip). A random effect is worse than none.
+- **Frequency**: **2–6 edits per 30 seconds** with duration-scaled caps (`<=75s`: `12` edits / `2` flashes / `5` titles; `76–120s`: `24 / 3 / 8`; `121–180s`: `30 / 4 / 11`). A random effect is worse than none.
 - **Never overlap two zoom-type edits** (`zoom_in`, `punch_in`, `zoom_pulse`).
 - **Peak zoom cap**: Never exceed **`+15%` (`strength <= 0.15`, `1.15x`)** on face-framed shots; **`1.12x` (`0.12`)** is the sweet spot.
 
@@ -82,11 +82,11 @@ For `PRO_TALKING_HEAD` (single speaker to camera):
 | **`zoom_pulse`** | `0.4–1.2s` | `0.04–0.10` | Quick symmetric in-and-out beat hit on a single shocking word or number. |
 | **`color_pop`** | `1.0–4.0s` | `0.2–1.0` (`contrast = 1+0.15s`, `sat = 1+0.6s`) | Boost contrast & vibrancy on product reveals, energetic highs, or B-roll highlights. |
 | **`bw_moment`** | `0.8–3.5s` | `saturation = 0` | Desaturate for ironic quotes, mistakes, flashbacks, or serious counterpoint. |
-| **`flash`** | `0.15s` (4 frames @ 30fps) | `brightness +0.35` | Brief white flash at post-hook transition or major reveal. **Hard max: `2` per clip.** |
+| **`flash`** | `0.15s` (4 frames @ 30fps) | `brightness +0.35` | Brief white flash at post-hook transition or major reveal. **Duration-scaled max: `2` (`<=75s`), `3` (`76–120s`), `4` (`121–180s`).** |
 | **`vignette`** | `1.5–6.0s` | `angle = PI/4.5` | Subtle edge darkening for intimate confession or story climax. |
 | **`broll_cutaway`** | `1.5–3.5s` | Full-frame or top split | Visual proof (stock clip, tweet/article screenshot, chart, product shot) placed `0–3 frames` before its spoken keyword. Speed up slow B-roll `120–150%` if needed. |
 | **`screen_callout`** | `1.5–4.0s` | `1.2x–1.5x` crop + highlight box/arrow | Mandatory on `knowledge`/`review` clips showing code, spreadsheets, or dashboards — zoom into the exact active region. |
-| **`keyword_title`** | `1.45s` (`TITLE_SECONDS`) | `<= 14 chars`, `>= 2.5s` apart, **max `5`** | Bold top-zone anchor phrases (`Archivo Black`, `#FF5A1F` or brand accent) over face headroom ONLY — **never during `[0, hook.duration_sec]`** and never over screencast content. |
+| **`keyword_title`** | `1.45s` (`TITLE_SECONDS`) | `<= 14 chars`, `>= 2.5s` apart, **max `5` (`<=75s`) / `8` (`76–120s`) / `11` (`121–180s`)** | Bold top-zone anchor phrases (`Archivo Black`, `#FF5A1F` or brand accent) over face headroom ONLY — **never during `[0, hook.duration_sec]`** and never over screencast content. |
 
 ---
 
@@ -105,7 +105,7 @@ For `PRO_TALKING_HEAD` (single speaker to camera):
 ## 6. Audio Mix & Sound Design Blueprint
 
 1. **Voice / Dialogue (Layer 1)**: De-noise + light EQ presence boost (`+2–3 dB` around `3–5 kHz`) + compression (`3:1`–`4:1`). Normalize integrated loudness to **`-14` to `-15 LUFS`** with **`-1.2 dBTP`** true peak.
-2. **Music Bed (Layer 2)**: Instrumental track matching clip energy at **`-20` to `-25 dB`** relative to voice, ducked **`-3 dB`** whenever voice is active. **Drop music completely (`music_dropouts`)** for `0.5–2.0s` right before a major twist or mic-drop punchline.
+2. **Music Bed (Layer 2 — Optional)**: When used, pick an instrumental track matching clip energy at **`-20` to `-25 dB`** relative to voice, ducked **`-3 dB`** whenever voice is active, and **drop music completely (`music_dropouts`)** for `0.5–2.0s` right before a major twist or mic-drop punchline. Skip the music bed entirely when a channel/project prefers pure original audio + micro-SFX.
 3. **Micro-SFX (Layer 3)**: Land every SFX **`0–3 frames` (`0.00–0.10s`) BEFORE** the visual cut/pop:
    - `whoosh`: Hook exit flash, B-roll slide-in, layout switch.
    - `pop` / `click`: Hook pill entrance, `keyword_title`, highlight box/arrow.

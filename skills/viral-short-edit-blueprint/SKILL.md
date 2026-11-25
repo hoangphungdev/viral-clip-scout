@@ -62,14 +62,14 @@ Load [`./references/retention-pacing-and-effects.md`](./references/retention-pac
 2. **Dead-Air & Jump-Cut Tightening**:
    - On `PRO_TALKING_HEAD`, cut gaps `>= 0.36s` keeping `0.13s` tail / `0.10s` lead (`min_keep 0.30s`), alternating scale jumps (`1.00 -> 1.12 -> 1.05 -> 1.16`) every `1.6–4.5s` with `0.8%/s` slow push-in (max `+5%`) and background dim (`0.24` gain). Target `3.5–4.1 words/s`.
 3. **Pattern Interrupts, Effects & B-Roll**:
-   - Budget **2–6 edits per 30s** (hard max `12` per clip). Never stack random effects.
-   - Allowed types: `zoom_in`, `punch_in`, `zoom_pulse`, `color_pop`, `bw_moment`, `flash` (max `2`), `vignette`, `broll_cutaway`, `screen_callout`, `keyword_title` (max `5`, `1.45s`, `>=2.5s` apart, `<=14` chars, never during `[0, hook.duration_sec]`).
+   - Budget **2–6 edits per 30s** with duration-scaled caps (`<=75s`: max `12` edits, `2` flashes, `5` titles; extended `75–180s` Shorts scale up to `24–30` edits, `3–4` flashes, `8–11` titles). Never stack random effects.
+   - Allowed types: `zoom_in`, `punch_in`, `zoom_pulse`, `color_pop`, `bw_moment`, `flash` (duration-scaled max), `vignette`, `broll_cutaway`, `screen_callout`, `keyword_title` (duration-scaled max, `1.45s`, `>=2.5s` apart, `<=14` chars, never during `[0, hook.duration_sec]`).
    - **Critical rule**: Never overlap zoom-type edits; keep zoom `strength <= 0.15`; never use zooms if `has_burned_captions` is `true` (zooms crop baked text).
 4. **Dynamic Captions & Safe Zones**:
    - Choose a preset (`default`, `hormozi`, `pill`, `lime`, `oneword`, `cine`, `clean`) with `1–3` words (`9–18` chars, `<=1.4s`) per block and highlight power words.
    - Place on `seam` (`47–54%` Y) during `SPLIT` stretches and inside the `900×1160` universal safe box (`>=15%` bottom clearance; higher if targeting Instagram Reels).
 5. **Audio & Sound Design**:
-   - Voice `-14` to `-15 LUFS` (`-1.2 dBTP`); music bed `-20` to `-25 dB` with `-3 dB` speech ducking and strategic drop-outs before punchlines; micro-SFX (`whoosh`, `pop`, `click`, `riser`, `sub_hit`, `ding`) landed `0–3 frames` (`0.00–0.10s`) ahead of the beat.
+   - Voice `-14` to `-15 LUFS` (`-1.2 dBTP`); optional music bed `-20` to `-25 dB` with `-3 dB` speech ducking and strategic drop-outs before punchlines (omit music bed when the user/project prefers pure original audio + micro-SFX); micro-SFX (`whoosh`, `pop`, `click`, `riser`, `sub_hit`, `ding`) landed `0–3 frames` (`0.00–0.10s`) ahead of the beat.
 6. **Payoff & Loop Close**:
    - Hard-cut right after the final punchline word (no outro cards/generic CTAs) or bridge the closing phrase back into frame 1 for a seamless loop.
 
@@ -132,7 +132,7 @@ Run:
 ```bash
 python "<skill_dir>/scripts/analyze_for_edit.py" validate "<out_dir>/clip_XX_<slug>_edit_plan.json"
 ```
-Fix any reported `errors` (overlapping zooms, excessive zoom strength, >2 flashes, >5 titles, title colliding with hook window, hook colliding with caption band, or post-cut duration < 5s) before presenting.
+Fix any reported `errors` (overlapping zooms, excessive zoom strength, exceeding duration-scaled flash/title limits, title colliding with hook window, hook colliding with caption band, or post-cut duration < 5s) before presenting.
 
 ### 6. Present & Optional Handoff
 Present a concise summary per clip (layout, hook, caption preset, top visual beats, audio/SFX cues, and output file links). Mention NLE handoff options: manual edit in CapCut/Resolve, live automation in Premiere Pro (`edit-premiere-project` MCP), or programmatic render in Remotion (`remotion-video-editor` + `video-direction-qa`).

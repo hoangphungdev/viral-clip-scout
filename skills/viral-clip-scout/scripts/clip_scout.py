@@ -1037,7 +1037,35 @@ def cmd_selftest(_args: argparse.Namespace) -> None:
         zero_hl = json.loads((zero_work / "exports" / "highlights.json").read_text(encoding="utf-8"))
         assert zero_hl["kept_count"] == 0 and zero_hl["kept"] == []
 
-    print(json.dumps({"selftest": "passed", "checks": 5}))
+        # 6. Extended Shorts duration check: ~87.45s clip passes default max_sec=180.0, fails max_sec=75.0
+        ext_work = root / "ext_work"
+        cmd_prepare(argparse.Namespace(
+            source=str(wjson), out=str(ext_work), transcript=None, lang="auto",
+            whisper_model="small", window_mins=45.0, overlap_mins=3.0, force_whisper=False,
+        ))
+        ext_cand = ext_work / "candidates.json"
+        ext_cand.write_text(json.dumps({
+            "candidates": [{
+                "start_id": 1, "end_id": 22, "title": "Extended Arc Clip",
+                "hook": "Watch until the finale", "why": "Full multi-beat payoff",
+                "scores": {"hook": 22, "standalone": 21, "value": 22, "payoff": 22},
+            }]
+        }), encoding="utf-8")
+        cmd_finalize(argparse.Namespace(
+            work_dir=str(ext_work), candidates=str(ext_cand), min_score=78, min_axis=15,
+            min_sec=15.0, max_sec=180.0, overlap_ratio=0.4, pad_start=0.15, pad_end=0.25, cut_streams=False,
+        ))
+        ext_hl = json.loads((ext_work / "exports" / "highlights.json").read_text(encoding="utf-8"))
+        assert ext_hl["kept_count"] == 1 and ext_hl["kept"][0]["duration"] > 75.0
+
+        cmd_finalize(argparse.Namespace(
+            work_dir=str(ext_work), candidates=str(ext_cand), min_score=78, min_axis=15,
+            min_sec=15.0, max_sec=75.0, overlap_ratio=0.4, pad_start=0.15, pad_end=0.25, cut_streams=False,
+        ))
+        capped_hl = json.loads((ext_work / "exports" / "highlights.json").read_text(encoding="utf-8"))
+        assert capped_hl["kept_count"] == 0 and "outside [15, 75]s" in capped_hl["rejected"][0]["reason"]
+
+    print(json.dumps({"selftest": "passed", "checks": 6}))
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1061,7 +1089,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_fin.add_argument("--min-score", type=int, default=78, help="Minimum total score /100 (default: 78)")
     p_fin.add_argument("--min-axis", type=int, default=15, help="Minimum score per axis /25 (default: 15)")
     p_fin.add_argument("--min-sec", type=float, default=15.0, help="Minimum clip duration in seconds")
-    p_fin.add_argument("--max-sec", type=float, default=75.0, help="Maximum clip duration in seconds")
+    p_fin.add_argument("--max-sec", type=float, default=180.0, help="Maximum clip duration in seconds (default: 180 for YouTube Shorts up to 3 min)")
     p_fin.add_argument("--overlap-ratio", type=float, default=0.4, help="Max allowed overlap ratio between kept clips")
     p_fin.add_argument("--pad-start", type=float, default=0.15, help="Pre-speech padding in seconds")
     p_fin.add_argument("--pad-end", type=float, default=0.25, help="Post-speech padding in seconds")

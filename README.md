@@ -11,7 +11,7 @@ A portable, zero-render [Agent Skills](https://agentskills.io) bundle (`viral-cl
 
 ### 1. `skills/viral-clip-scout/`
 Zero-render, quality-gated moment scouting:
-- **No forced quota**: 2-phase pipeline (Candidate Recall -> Strict 4-Axis Rubric Judge across `hook`, `standalone`, `value`, `payoff`, `0–25` each). Defaults to `--min-score 78 --min-axis 15` and never pads weak filler.
+- **No forced quota**: 2-phase pipeline (Candidate Recall -> Strict 4-Axis Rubric Judge across `hook`, `standalone`, `value`, `payoff`, `0–25` each). Defaults to `--min-score 78 --min-axis 15 --min-sec 15 --max-sec 180` (supports YouTube Shorts up to 3 minutes so high-scoring multi-beat story arcs aren't artificially chopped at 60s) and never pads weak filler.
 - **Pure Python 3.10+ stdlib CLI**: `skills/viral-clip-scout/scripts/clip_scout.py` handles `.srt`, `.vtt`, and Whisper `.json` with zero third-party packages and detects 1-second acoustic RMS `[LOUD]` spikes on WAV audio using stdlib `wave` + `array`.
 - **NLE-ready exports**:
   - `timeline.fcpxml` (FCPXML v1.10 with both `Scout Markers` and `Scout Selects` timelines)
@@ -24,8 +24,8 @@ Zero-render, quality-gated moment scouting:
 Retention-engineered vertical `9:16` edit planning chained directly from `viral-clip-scout`:
 - **Pure Python 3.10+ stdlib CLI**: `skills/viral-short-edit-blueprint/scripts/analyze_for_edit.py` inspects `highlights.json` or `.srt` telemetry (`words_per_sec`, `>= 0.36s` dead-air silence cuts, scale beats, caption blocks), optionally samples `1024px` video frames via `ffmpeg`, and validates `edit_plan.json` guardrails.
 - **7 Vertical Layout Modes**: `PRO_TALKING_HEAD`, `TRACK`, `SPLIT`, `ALTERNATE`, `SCREENCAST`, `INSET`, and `WIDE` (plus bottom burned-subtitle pre-crop detection).
-- **Hook, Pacing & Effects Guardrails**: `0–3s` clip-grounded hook overlays (7 styles, face-safe & caption-safe placement), dead-air tightening with alternating scale beats (`1.00 / 1.12 / 1.05 / 1.16`), disciplined pattern-interrupt budgets (`2–6` edits per 30s, zoom `<= 1.15x`, no overlapping zooms, no post-zoom on burned captions).
-- **Captions, Safe Zones & Audio**: 7 dynamic caption presets (`default`, `hormozi`, `pill`, `lime`, `oneword`, `cine`, `clean`), universal `900×1160` safe box (`1080×1920` TikTok / Reels / Shorts), `-14` to `-15 LUFS` voice + `-3 dB` music ducking + micro-SFX sync, and NLE recipes for CapCut, Premiere Pro, DaVinci Resolve, Remotion, and FFmpeg.
+- **Hook, Pacing & Effects Guardrails**: `0–3s` clip-grounded hook overlays (7 styles, face-safe & caption-safe placement), dead-air tightening with alternating scale beats (`1.00 / 1.12 / 1.05 / 1.16`), duration-scaled pattern-interrupt budgets (`<=75s`: max `12` edits / `2` flashes / `5` titles; scales up to `30 / 4 / 11` for `75–180s` Shorts, zoom `<= 1.15x`, no overlapping zooms, no post-zoom on burned captions).
+- **Captions, Safe Zones & Audio**: 7 dynamic caption presets (`default`, `hormozi`, `pill`, `lime`, `oneword`, `cine`, `clean`), universal `900×1160` safe box (`1080×1920` TikTok / Reels / Shorts), `-14` to `-15 LUFS` voice + optional music bed (`-3 dB` ducking, omit if using pure dialogue + micro-SFX) + micro-SFX sync, and NLE recipes for CapCut, Premiere Pro, DaVinci Resolve, Remotion, and FFmpeg.
 
 ---
 

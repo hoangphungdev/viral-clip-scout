@@ -44,7 +44,8 @@ Each line uses the compact format `id|MM:SS|[SIGNALS] text`:
 - `[PAUSE]`: >= 2.0s silence right before this cue (natural topic boundary).
 
 ### 3. Phase 1 — Candidate Recall (0..N Moments)
-Scan the chunks looking for **15–75 second** self-contained segments (`start_id`..`end_id`) matched to the video's genre profile (`podcast`, `knowledge`, `storytelling`, `review`, `stream` — ask or infer from content):
+Scan the chunks looking for **15–180 second** self-contained segments (`start_id`..`end_id`) matched to the video's genre profile (`podcast`, `knowledge`, `storytelling`, `review`, `stream` — ask or infer from content):
+- Keep punchy single-beat moments tight (`25–60s`), and **do not artificially chop a high-scoring climax or multi-beat story arc at 60s** if extending up to `75–180s` (YouTube Shorts' 3-minute ceiling) improves `standalone` and `payoff` without dead air. Never pad weak filler just to make a clip longer.
 - **Never force a count.** Do not pad weak filler to hit a target number. Return `[]` if nothing clears the 2-Second Test.
 - Fix dangling openings by moving `start_id` slightly earlier to capture the question/premise rather than cutting off the payoff.
 - Avoid overlapping/duplicate picks of the same point.
@@ -83,7 +84,7 @@ Run:
 ```bash
 python "<skill_dir>/scripts/clip_scout.py" finalize "<work_dir>" --candidates "<work_dir>/candidates.json"
 ```
-Default thresholds are `--min-score 78 --min-axis 15` (adjust only if the user explicitly asks for `84/18` ultra-picky or `70/13` wide-net). Add `--cut-streams` only if the user asked for lossless MP4 cuts (`ffmpeg -c copy`) on a local video.
+Default thresholds are `--min-score 78 --min-axis 15 --min-sec 15 --max-sec 180` (pass `--max-sec 60` or `75` only if strict short duration is requested, or adjust score thresholds to `84/18` ultra-picky / `70/13` wide-net when explicitly asked). Add `--cut-streams` only if the user asked for lossless MP4 cuts (`ffmpeg -c copy`) on a local video.
 
 **Present the result clearly:**
 - If `kept_count == 0`, tell the user **no segments cleared the quality bar** (and briefly note the top rejected reason) rather than inventing clips.

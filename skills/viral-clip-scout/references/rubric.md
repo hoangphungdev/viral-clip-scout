@@ -61,6 +61,11 @@ Filtering is enforced deterministically in `clip_scout.py finalize`:
 | **Balanced (Default)** | `78` | `15` | Daily/weekly repurposing; keeps only genuinely strong, standalone moments. |
 | **Wide Net** | `70` | `13` | Raw editorial scouting when a human editor wants more rough-cut candidates. |
 
+### Duration Policy (`--min-sec 15 --max-sec 180`)
+- Default clip duration range is **`15–180s`** (matching YouTube Shorts' 3-minute limit).
+- **Never artificially truncate** a high-stakes multi-beat story arc (e.g., heist buildup -> chase -> finale payoff) at `60s` when keeping the full arc intact (`75–165s`) earns a higher `standalone`/`payoff` score without dead air.
+- **Never stretch** a tight single-punchline clip (`25–60s`) past its cleanest landing.
+
 ---
 
 ## 3. Genre Profiles (Tune What "Good" Means)
